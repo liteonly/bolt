@@ -1,3 +1,4 @@
-tmp/
+tmp/token_index.json
+tmp/term_frequency_map.json
 docs/
 node_modules/
