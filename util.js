@@ -26,14 +26,15 @@ function addDocToIndex (tokens, filePath) {
   return new Promise((resolve) => {
     if (tokens.length !== 0) {
       tokens.forEach((token) => {
-        if (process.index.hasOwnProperty(token)) {
-          process.index[token].push(filePath)
+        if (process.index.tokens.hasOwnProperty(token)) {
+          process.index.tokens[token].push(filePath)
         } else {
-          process.index[token] = [filePath]
+          process.index.tokens[token] = [filePath]
         }
-        process.index[token] = _.uniq(process.index[token])
+        process.index.tokens[token] = _.uniq(process.index.tokens[token])
       })
     }
+    process.index.docCount += 1
     resolve()
   })
 }
@@ -141,8 +142,8 @@ function getRelevantDocuments (tokens) {
   return new Promise((resolve) => {
     var documents = []
     tokens.forEach((token) => {
-      if (process.index.hasOwnProperty(token)) {
-        documents = documents.concat(process.index[token])
+      if (process.index.tokens.hasOwnProperty(token)) {
+        documents = documents.concat(process.index.tokens[token])
       }
     })
     documents = _.uniq(documents)
@@ -164,7 +165,7 @@ function scoreDocumentsByTF (tokens, documents) {
     tokens.forEach((token) => {
       if (process.term_frequency_map[doc].hasOwnProperty(token)) {
         console.log(doc, token, Math.log10(process.term_frequency_map[doc][token] + 1))
-        tfScore += Math.log10(process.term_frequency_map[doc][token] + 1)
+        tfScore = tfScore + (Math.log10(process.index.docCount / process.index.tokens[token].length) * Math.log10(process.term_frequency_map[doc][token] + 1))
       }
     })
     selectedDocsTf.push({'doc': doc, tfScore: tfScore})
@@ -174,19 +175,17 @@ function scoreDocumentsByTF (tokens, documents) {
 }
 
 function storeTermFrequency (tokens, termFrequencyPath, docId) {
-  return new Promise((resolve) => {
-    var tfMap = {}
-    tokens.forEach((token) => {
-      if (tfMap.hasOwnProperty(token)) {
-        tfMap[token] += 1
-      } else {
-        tfMap[token] = 1
-      }
-    })
-    process.term_frequency_map[docId] = tfMap
-    console.log(process.term_frequency_map)
-    return writeDocument(process.term_frequency_map, termFrequencyPath).then(() => resolve())
+  var tfMap = {}
+  tokens.forEach((token) => {
+    if (tfMap.hasOwnProperty(token)) {
+      tfMap[token] += 1
+    } else {
+      tfMap[token] = 1
+    }
   })
+  process.term_frequency_map[docId] = tfMap
+  console.log(process.term_frequency_map)
+  return writeDocument(process.term_frequency_map, termFrequencyPath)
 }
 
 function createRequiredPaths (cfg) {

@@ -51,7 +51,7 @@ app.use('/search', (req, res, next) => {
 })
 
 util.createRequiredPaths(cfg)
-util.readJsonFile(cfg.token_index_path).then((jsonIndex) => {
+util.readJsonFile(cfg.token_index_path, {'tokens': {}, docCount: 0}).then((jsonIndex) => {
   process.index = jsonIndex
   console.log('jsonIndex ' + jsonIndex)
   return util.readJsonFile(cfg.stopwords_path, [])
